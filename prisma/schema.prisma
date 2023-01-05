@@ -8,14 +8,77 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
-  username        String   @unique
-  name            String
-  profilePic      String
-  description     String?
-  location        String?
-  yearsExperience Int?
-  company         String?
-  createdAt       DateTime @default(now())
+  id                   Int                   @id @default(autoincrement())
+  email                String                @unique
+  username             String                @unique
+  name                 String
+  profilePic           String
+  title                String?
+  bio                  String?
+  programmingLanguages ProgrammingLanguage[]
+  company              String?
+  location             String?
+  website              String?
+  github               String
+  linkedin             String?
+  twitter              String?
+  createdAt            DateTime              @default(now())
+  projects             Project[]
+  comments             Comment[]
+  likes                Like[]
+}
+
+model Project {
+  id                   Int                   @id @default(autoincrement())
+  title                String
+  description          String
+  programmingLanguages ProgrammingLanguage[]
+  github               String
+  website              String?
+  logo                 String?
+  isCompleted          Boolean               @default(false)
+
+  estimatedCompletion DateTime?
+
+  likes     Like[]
+  comments  Comment[]
+  User      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  createdAt DateTime  @default(now())
+}
+
+// Inspiration: good websites to look at for inspiration
+// Assets: assets to use for project (images, icons, etc.)
+// Education: videos or article to view for learning project's skills
+// APIs: APIs to use for project
+// Roadmap: steps to take to complete project
+// Snippets: code snippets to use for project (react, node, etc.)
+// Quick Links: links to manage the project (trello, github, etc.)
+// Brainstorming: brainstorming for project (features, user flow, tech stack/libraries, etc.)
+// Coding: coding for project (tasks, github commits, documentation references, etc.)
+
+model ProgrammingLanguage {
+  id                  Int       @id @default(autoincrement())
+  programmingLanguage String
+  users               User[]
+  projects            Project[]
+}
+
+model Like {
+  id        Int      @id @default(autoincrement())
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  Project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  text      String
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  Project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  createdAt DateTime @default(now())
 }
