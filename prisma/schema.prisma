@@ -9,173 +9,62 @@ datasource db {
 
 model User {
   id            Int            @id @default(autoincrement())
-  email         String         @unique
-  username      String         @unique
   name          String
-  profilePic    String
+  username      String         @unique
+  email         String         @unique
   title         String?
   bio           String?
-  languages     Language[]
-  company       String?
+  profilePic    String
   location      String?
+  company       String?
   website       String?
   github        String
   linkedin      String?
   twitter       String?
   projects      Project[]
+  languages     Language[]
+  views         View[]
   conversations Conversation[]
   likes         Like[]
   comments      Comment[]
   followers     Follower[]
   following     Following[]
-  views         View[]
   notifications Notification[]
   createdAt     DateTime       @default(now())
 }
 
-model Project {
-  id           Int        @id @default(autoincrement())
-  title        String
-  description  String
-  languages    Language[]
-  github       String
-  website      String?
-  logo         String?
-  primaryColor String?
-  isCompleted  Boolean    @default(false)
-  isPrivate    Boolean    @default(false)
-  likes        Like[]
-  comments     Comment[]
-  views        View[]
-
-  quickLinks   QuickLink[] // links to manage the project (trello, github, etc.)
-  references   Reference[] // videos, articles, or documentation to view for learning project's skills 
-  apis         API[] // APIs to use for project
-  snippets     Snippet[] // code snippets to use for project (react, node, etc.)
-  designs      Design[] // designs for project (wireframes, mockups, etc.)
-  assets       Assets[] // assets to use for project (images, icons, etc.)
-  inspirations Inspiration[] // good websites to look at for inspiration
-  services     Service[] // services to use for project
-
-  User      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  createdAt DateTime @default(now())
-}
-
-// Coding: coding for project (tasks, github commits, documentation references, etc.)
-// Brainstorming: brainstorming for project (features, user flow, tech stack/libraries, etc.)
-// Roadmap: steps to take to complete project
-
-model QuickLink {
-  id        Int     @id @default(autoincrement())
-  title     String
-  url       String
-  Project   Project @relation(fields: [projectId], references: [id])
-  projectId Int
-}
-
-enum ReferenceType {
-  ARTICLE
-  DOCUMENTATION
-  VIDEO
-}
-
-model Reference {
-  id          Int           @id @default(autoincrement())
-  title       String
-  url         String
-  type        ReferenceType
-  description String
-  Project     Project       @relation(fields: [projectId], references: [id])
-  projectId   Int
-}
-
-model Inspiration {
-  id        Int     @id @default(autoincrement())
-  title     String
-  url       String
-  notes     String
-  Project   Project @relation(fields: [projectId], references: [id])
-  projectId Int
-}
-
-model API {
-  id          Int     @id @default(autoincrement())
-  title       String
-  url         String
-  description String
-  Project     Project @relation(fields: [projectId], references: [id])
-  projectId   Int
-}
-
-model Snippet {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  language    Language @relation(fields: [languageId], references: [id])
-  code        String
-  Project     Project  @relation(fields: [projectId], references: [id])
-  projectId   Int
-  languageId  Int
-}
-
-model Assets {
-  id        Int     @id @default(autoincrement())
-  title     String
-  url       String
-  notes     String
-  Project   Project @relation(fields: [projectId], references: [id])
-  projectId Int
-}
-
-enum DesignType {
-  WIREFRAME
-  MOCKUP
-  PROTOTYPE
-}
-
-model Design {
-  id          Int        @id @default(autoincrement())
-  title       String
-  url         String
-  description String
-  type        DesignType
-  Project     Project    @relation(fields: [projectId], references: [id])
-  projectId   Int
-}
-
-model Service {
-  id          Int     @id @default(autoincrement())
-  title       String
-  url         String
-  description String
-  costs       Cost[]
-  Project     Project @relation(fields: [projectId], references: [id])
-  projectId   Int
-}
-
-model Cost {
-  id              Int       @id @default(autoincrement())
-  description     String
-  rate            String?
-  priceOrEstimate Float?
-  pricingUrl      String?
-  expiration      DateTime?
-  Service         Service   @relation(fields: [serviceId], references: [id])
-  serviceId       Int
+enum LanguageType {
+  FRAMEWORK
+  LIBRARY
+  LANGUAGE
+  DATABASE
+  PLATFORM
+  TOOL
+  OTHER
 }
 
 model Language {
-  id       Int       @id @default(autoincrement())
-  name     String
-  users    User[]
-  projects Project[]
-  snippets Snippet[]
+  id        Int          @id @default(autoincrement())
+  name      String
+  type      LanguageType
+  users     User[]
+  projects  Project[]
+  snippets  Snippet[]
+  createdAt DateTime     @default(now())
+}
+
+model View {
+  id        Int      @id @default(autoincrement())
+  User      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  Project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  createdAt DateTime @default(now())
 }
 
 model Message {
   id             Int          @id @default(autoincrement())
-  text           String
+  text           String       @db.Text
   Conversation   Conversation @relation(fields: [conversationId], references: [id])
   conversationId Int
   createdAt      DateTime     @default(now())
@@ -191,8 +80,14 @@ model Conversation {
   createdAt        DateTime  @default(now())
 }
 
+enum LikeType {
+  PROJECT
+  COMMENT
+}
+
 model Like {
   id        Int      @id @default(autoincrement())
+  type      LikeType
   User      User     @relation(fields: [userId], references: [id])
   userId    Int
   Project   Project  @relation(fields: [projectId], references: [id])
@@ -202,7 +97,7 @@ model Like {
 
 model Comment {
   id        Int      @id @default(autoincrement())
-  text      String
+  text      String   @db.Text
   User      User     @relation(fields: [userId], references: [id])
   userId    Int
   Project   Project  @relation(fields: [projectId], references: [id])
@@ -228,15 +123,6 @@ model Following {
   createdAt         DateTime @default(now())
 }
 
-model View {
-  id        Int      @id @default(autoincrement())
-  User      User     @relation(fields: [userId], references: [id])
-  userId    Int
-  Project   Project  @relation(fields: [projectId], references: [id])
-  projectId Int
-  createdAt DateTime @default(now())
-}
-
 enum NotificationType {
   LIKE
   COMMENT
@@ -254,4 +140,193 @@ model Notification {
   User             User             @relation(fields: [userId], references: [id])
   userId           Int
   createdAt        DateTime         @default(now())
+}
+
+model Project {
+  id           Int           @id @default(autoincrement())
+  name         String
+  description  String        @db.Text
+  website      String?
+  github       String
+  logo         String?
+  colors       Color[]
+  tags         Tag[]
+  languages    Language[]
+  views        View[]
+  likes        Like[]
+  comments     Comment[]
+  isCompleted  Boolean       @default(false)
+  isPrivate    Boolean       @default(false)
+  quickLinks   QuickLink[]
+  tasks        Task[]
+  issues       Issue[]
+  references   Reference[]
+  designs      Design[]
+  snippets     Snippet[]
+  inspirations Inspiration[]
+  features     Feature[]
+  services     Service[]
+  insights     Insight[]
+  User         User          @relation(fields: [userId], references: [id])
+  userId       Int
+  createdAt    DateTime      @default(now())
+}
+
+model Color {
+  id        Int     @id @default(autoincrement())
+  color     String
+  isPrimary Boolean @default(false)
+  Project   Project @relation(fields: [projectId], references: [id])
+  projectId Int
+}
+
+model Tag {
+  id        Int       @id @default(autoincrement())
+  name      String
+  projects  Project[]
+  createdAt DateTime  @default(now())
+}
+
+model QuickLink {
+  id        Int     @id @default(autoincrement())
+  title     String
+  url       String
+  Project   Project @relation(fields: [projectId], references: [id])
+  projectId Int
+}
+
+enum TaskDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Task {
+  id                  Int            @id @default(autoincrement())
+  title               String
+  description         String
+  difficulty          TaskDifficulty
+  estimatedCompletion DateTime?
+  isCompleted         Boolean        @default(false)
+  Project             Project        @relation(fields: [projectId], references: [id])
+  projectId           Int
+  createdAt           DateTime       @default(now())
+}
+
+enum IssueLevel {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Issue {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  level       IssueLevel
+  Project     Project    @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime   @default(now())
+}
+
+enum ReferenceType {
+  ARTICLE
+  DOCUMENTATION
+  VIDEO
+  API
+  OTHER
+}
+
+model Reference {
+  id          Int           @id @default(autoincrement())
+  title       String
+  url         String
+  type        ReferenceType
+  description String
+  Project     Project       @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime      @default(now())
+}
+
+enum DesignType {
+  WIREFRAME
+  MOCKUP
+  PROTOTYPE
+  ASSET
+  USER_FLOW
+  OTHER
+}
+
+model Design {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String
+  fileUrl     String
+  type        DesignType
+  Project     Project    @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime   @default(now())
+}
+
+model Snippet {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  language    Language @relation(fields: [languageId], references: [id])
+  code        String
+  Project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  languageId  Int
+  createdAt   DateTime @default(now())
+}
+
+model Inspiration {
+  id        Int      @id @default(autoincrement())
+  title     String
+  url       String
+  notes     String
+  Project   Project  @relation(fields: [projectId], references: [id])
+  projectId Int
+  createdAt DateTime @default(now())
+}
+
+model Feature {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  Project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime @default(now())
+}
+
+model Service {
+  id          Int      @id @default(autoincrement())
+  title       String
+  url         String
+  description String
+  costs       Cost[]
+  Project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime @default(now())
+}
+
+model Cost {
+  id              Int       @id @default(autoincrement())
+  description     String
+  rate            String?
+  priceOrEstimate Float?
+  pricingUrl      String?
+  expiration      DateTime?
+  Service         Service   @relation(fields: [serviceId], references: [id])
+  serviceId       Int
+  createdAt       DateTime  @default(now())
+}
+
+model Insight {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String   @db.Text
+  Project     Project  @relation(fields: [projectId], references: [id])
+  projectId   Int
+  createdAt   DateTime @default(now())
 }
