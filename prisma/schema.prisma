@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 model User {
@@ -22,6 +23,7 @@ model User {
   linkedin      String?
   twitter       String?
   projects      Project[]
+  posts         Post[]
   languages     Language[]
   views         View[]
   conversations Conversation[]
@@ -31,6 +33,18 @@ model User {
   following     Following[]
   notifications Notification[]
   createdAt     DateTime       @default(now())
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  title     String
+  body      String    @db.Text
+  User      User      @relation(fields: [userId], references: [id])
+  userId    Int
+  comments  Comment[]
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
 }
 
 enum LanguageType {
@@ -60,6 +74,8 @@ model View {
   Project   Project  @relation(fields: [projectId], references: [id])
   projectId Int
   createdAt DateTime @default(now())
+
+  @@index([userId, projectId])
 }
 
 model Message {
@@ -68,6 +84,8 @@ model Message {
   Conversation   Conversation @relation(fields: [conversationId], references: [id])
   conversationId Int
   createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
 }
 
 model Conversation {
@@ -78,6 +96,8 @@ model Conversation {
   User             User      @relation(fields: [userId], references: [id])
   userId           Int
   createdAt        DateTime  @default(now())
+
+  @@index([userId])
 }
 
 enum LikeType {
@@ -93,16 +113,29 @@ model Like {
   Project   Project  @relation(fields: [projectId], references: [id])
   projectId Int
   createdAt DateTime @default(now())
+
+  @@index([userId, projectId])
+}
+
+enum CommentType {
+  PROJECT
+  POST
 }
 
 model Comment {
-  id        Int      @id @default(autoincrement())
-  text      String   @db.Text
-  User      User     @relation(fields: [userId], references: [id])
+  id        Int         @id @default(autoincrement())
+  text      String      @db.Text
+  type      CommentType
+  User      User        @relation(fields: [userId], references: [id])
   userId    Int
-  Project   Project  @relation(fields: [projectId], references: [id])
-  projectId Int
-  createdAt DateTime @default(now())
+  Project   Project?    @relation(fields: [projectId], references: [id])
+  projectId Int?
+  Post      Post?       @relation(fields: [postId], references: [id])
+  postId    Int?
+  threadId  Int
+  createdAt DateTime    @default(now())
+
+  @@index([userId, projectId, postId])
 }
 
 model Follower {
@@ -112,6 +145,8 @@ model Follower {
   followerId       Int
   followerUsername String
   createdAt        DateTime @default(now())
+
+  @@index([userId])
 }
 
 model Following {
@@ -121,6 +156,8 @@ model Following {
   followingId       Int
   followingUsername String
   createdAt         DateTime @default(now())
+
+  @@index([userId])
 }
 
 enum NotificationType {
@@ -140,6 +177,8 @@ model Notification {
   User             User             @relation(fields: [userId], references: [id])
   userId           Int
   createdAt        DateTime         @default(now())
+
+  @@index([userId])
 }
 
 model Project {
@@ -170,6 +209,8 @@ model Project {
   User         User          @relation(fields: [userId], references: [id])
   userId       Int
   createdAt    DateTime      @default(now())
+
+  @@index([userId])
 }
 
 model Color {
@@ -178,6 +219,8 @@ model Color {
   isPrimary Boolean @default(false)
   Project   Project @relation(fields: [projectId], references: [id])
   projectId Int
+
+  @@index([projectId])
 }
 
 model Tag {
@@ -193,6 +236,8 @@ model QuickLink {
   url       String
   Project   Project @relation(fields: [projectId], references: [id])
   projectId Int
+
+  @@index([projectId])
 }
 
 enum TaskDifficulty {
@@ -211,6 +256,8 @@ model Task {
   Project             Project        @relation(fields: [projectId], references: [id])
   projectId           Int
   createdAt           DateTime       @default(now())
+
+  @@index([projectId])
 }
 
 enum IssueLevel {
@@ -227,6 +274,8 @@ model Issue {
   Project     Project    @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime   @default(now())
+
+  @@index([projectId])
 }
 
 enum ReferenceType {
@@ -246,6 +295,8 @@ model Reference {
   Project     Project       @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime      @default(now())
+
+  @@index([projectId])
 }
 
 enum DesignType {
@@ -266,6 +317,8 @@ model Design {
   Project     Project    @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime   @default(now())
+
+  @@index([projectId])
 }
 
 model Snippet {
@@ -278,6 +331,8 @@ model Snippet {
   projectId   Int
   languageId  Int
   createdAt   DateTime @default(now())
+
+  @@index([projectId, languageId])
 }
 
 model Inspiration {
@@ -288,6 +343,8 @@ model Inspiration {
   Project   Project  @relation(fields: [projectId], references: [id])
   projectId Int
   createdAt DateTime @default(now())
+
+  @@index([projectId])
 }
 
 model Feature {
@@ -297,6 +354,8 @@ model Feature {
   Project     Project  @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime @default(now())
+
+  @@index([projectId])
 }
 
 model Service {
@@ -308,6 +367,8 @@ model Service {
   Project     Project  @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime @default(now())
+
+  @@index([projectId])
 }
 
 model Cost {
@@ -320,6 +381,8 @@ model Cost {
   Service         Service   @relation(fields: [serviceId], references: [id])
   serviceId       Int
   createdAt       DateTime  @default(now())
+
+  @@index([serviceId])
 }
 
 model Insight {
@@ -329,4 +392,6 @@ model Insight {
   Project     Project  @relation(fields: [projectId], references: [id])
   projectId   Int
   createdAt   DateTime @default(now())
+
+  @@index([projectId])
 }
